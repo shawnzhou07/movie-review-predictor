@@ -81,7 +81,7 @@ if __name__ == "__main__":
     
     # Train BPE tokenizer
     print("\nTraining BPE tokenizer...")
-    vocab, merges = train_bpe(combined_text, vocab_size=5000)
+    vocab, merges = train_bpe(combined_text, vocab_size=16000)
     
     # Save vocabulary and merges
     import pickle
