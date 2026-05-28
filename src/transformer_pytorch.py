@@ -20,13 +20,20 @@ class FeedForward(nn.Module):
 class TransformerBlock(nn.Module):
     def __init__(self, embed_dim, num_heads):
         super().__init__()
+        hidden_dim = embed_dim * 4
         self.attention = nn.MultiheadAttention(embed_dim, num_heads)
-        self.layer_norm = nn.LayerNorm(embed_dim)
+        self.layer_norm1 = nn.LayerNorm(embed_dim)
+        self.ff = FeedForward(embed_dim, hidden_dim)
+        self.layer_norm2 = nn.LayerNorm(embed_dim)
+
     
     def forward(self, x):
         attn_output, _ = self.attention(x, x, x)
         x = x + attn_output
-        x = self.layer_norm(x)
+        x = self.layer_norm1(x)
+        ff_output = self.ff(x)
+        x = x + ff_output
+        x = self.layer_norm2(x)
         return x
 
 
