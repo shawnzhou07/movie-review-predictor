@@ -1,18 +1,17 @@
 import torch
 import os
 from torch.utils.data import Dataset, DataLoader
-from tokenizer import Tokenizer
-import pickle
+from tokenizer import load_tokenizer, build_vocab_to_id, encode
 
 
-def load_data(data_path, tokenizer, max_tokens=None):
+def load_data(data_path, vocab_to_id, merges, max_tokens=None):
     text = ""
     for filename in os.listdir(data_path):
         if filename.endswith(".txt"):
             with open(os.path.join(data_path, filename), "r") as f:
                 text += f.read()
     
-    tokens = tokenizer.encode(text)
+    tokens = encode(text, vocab_to_id, merges)
     
     if max_tokens:
         tokens = tokens[:max_tokens]

@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import time
 import os
-from tokenizer import Tokenizer
+from tokenizer import load_tokenizer, build_vocab_to_id, encode
 from transformer_pytorch import Transformer
 from data_loader import load_data, create_dataloader
 import pickle
@@ -20,15 +20,16 @@ def train():
     num_epochs    = 3
     
     # ============ LOAD TOKENIZER ============
-    tokenizer = Tokenizer()
-    tokenizer.load("models/tokenizer_vocab.pkl", "models/tokenizer_merges.pkl")
-    print("✓ Tokenizer loaded")
+    vocab, merges = load_tokenizer()
+    vocab_to_id = build_vocab_to_id(vocab)
+    print(f"✓ Tokenizer loaded ({len(vocab_to_id)} tokens)")
     
     # ============ LOAD DATA ============
     tokens = load_data(
         data_path="data/pretrain/tinystories/",
-        tokenizer=tokenizer,
-        max_tokens=1000000  # start with 1M tokens for testing
+        vocab_to_id=vocab_to_id,
+        merges=merges,
+        max_tokens=1000000
     )
     print(f"✓ Loaded {len(tokens)} tokens")
     
