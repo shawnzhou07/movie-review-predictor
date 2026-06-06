@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import time
 import os
+from datetime import datetime
 from tokenizer import load_tokenizer, build_vocab_to_id, encode
 from transformer_pytorch import Transformer
 from data_loader import load_data, create_dataloader
@@ -16,7 +17,16 @@ def train():
     max_seq_len   = 256
     batch_size    = 32
     learning_rate = 3e-4
-    num_epochs    = 3
+    num_epochs    = 5
+    max_tokens    = 5000000
+    
+    # Run name for saving checkpoints
+    timestamp = datetime.now().strftime("%m%d_%H%M")
+    run_name = f"{max_tokens//1000}k_{timestamp}"
+    
+    # ============ RESUME FROM CHECKPOINT ============
+    resume_from = "models/transformer_epoch3.pt"  # Set to checkpoint path to resume, e.g.:
+    # resume_from = "models/transformer_1000k_0526_2130_epoch3.pt"
     
     # ============ LOAD TOKENIZER ============
     vocab, merges = load_tokenizer()
@@ -28,7 +38,7 @@ def train():
         data_path="data/pretrain/tinystories/",
         vocab_to_id=vocab_to_id,
         merges=merges,
-        max_tokens=100000  # 100k for testing, increase later
+        max_tokens=max_tokens
     )
     print(f"✓ Loaded {len(tokens)} tokens")
     
@@ -38,7 +48,12 @@ def train():
     
     # ============ CREATE MODEL ============
     model = Transformer(vocab_size, embed_dim, num_heads, num_blocks, max_seq_len)
-    print(f"✓ Model created")
+    
+    if resume_from and os.path.exists(resume_from):
+        model.load_state_dict(torch.load(resume_from))
+        print(f"✓ Resumed from {resume_from}")
+    else:
+        print("✓ Model created (fresh weights)")
     
     # ============ LOSS + OPTIMIZER ============
     loss_fn = nn.CrossEntropyLoss()
@@ -79,7 +94,7 @@ def train():
         print(f"Epoch {epoch+1} complete | Avg Loss: {avg_loss:.4f} | Time: {elapsed:.1f}s")
         
         # Save checkpoint
-        torch.save(model.state_dict(), f"models/transformer_epoch{epoch+1}.pt")
+        torch.save(model.state_dict(), f"models/transformer_{run_name}_epoch{epoch+1}.pt")
         print(f"✓ Checkpoint saved")
     
     print("✓ Training complete!")
