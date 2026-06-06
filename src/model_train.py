@@ -5,7 +5,6 @@ import os
 from tokenizer import load_tokenizer, build_vocab_to_id, encode
 from transformer_pytorch import Transformer
 from data_loader import load_data, create_dataloader
-import pickle
 
 
 def train():
@@ -29,7 +28,7 @@ def train():
         data_path="data/pretrain/tinystories/",
         vocab_to_id=vocab_to_id,
         merges=merges,
-        max_tokens=1000000
+        max_tokens=100000  # 100k for testing, increase later
     )
     print(f"✓ Loaded {len(tokens)} tokens")
     
@@ -56,8 +55,6 @@ def train():
             output = model(input_batch)
             
             # Reshape for loss calculation
-            # output: (batch, seq_len, vocab_size) → (batch * seq_len, vocab_size)
-            # target: (batch, seq_len) → (batch * seq_len)
             output = output.view(-1, vocab_size)
             target_batch = target_batch.view(-1)
             
@@ -73,7 +70,7 @@ def train():
             total_loss += loss.item()
             num_batches += 1
             
-            if num_batches % 100 == 0:
+            if num_batches % 10 == 0:
                 print(f"  Epoch {epoch+1} | Batch {num_batches}/{len(dataloader)} | Loss: {loss.item():.4f}")
         
         # Epoch summary

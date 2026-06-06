@@ -2,21 +2,29 @@ import torch
 import os
 from torch.utils.data import Dataset, DataLoader
 from tokenizer import load_tokenizer, build_vocab_to_id, encode
+from datasets import load_from_disk
 
 
 def load_data(data_path, vocab_to_id, merges, max_tokens=None):
-    text = ""
-    for filename in os.listdir(data_path):
-        if filename.endswith(".txt"):
-            with open(os.path.join(data_path, filename), "r") as f:
-                text += f.read()
+    dataset = load_from_disk(data_path)
+    stories = dataset["train"]
     
-    tokens = encode(text, vocab_to_id, merges)
+    all_tokens = []
     
-    if max_tokens:
-        tokens = tokens[:max_tokens]
+    for i, story in enumerate(stories):
+        # Tokenize each story individually (much faster!)
+        story_tokens = encode(story["text"], vocab_to_id, merges)
+        all_tokens.extend(story_tokens)
+        
+        if i % 500 == 0:
+            print(f"  Tokenized {i} stories ({len(all_tokens)} tokens)")
+        
+        # Stop if we have enough
+        if max_tokens and len(all_tokens) >= max_tokens:
+            all_tokens = all_tokens[:max_tokens]
+            break
     
-    return tokens
+    return all_tokens
 
 
 class TextDataset(Dataset):
